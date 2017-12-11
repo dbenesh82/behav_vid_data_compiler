@@ -1,0 +1,5 @@
+The python code in this repository takes a few thousand text files containing video analysis output and compiles them into a single large data frame.
+
+#Background
+
+Many parasites manipulate the behavior of their hosts. I conducted an experiment in which I infected different strains of copepods (a crustacean) with different strains of tapeworms. The goal was to quantify the extent to which host genes and parasite genes affect behavioral changes in infected hosts. The behavior of copepods was video recorded and then analyzed with ImageJ software. Each copepod was observed multiple times, which reflects changes in parasite development. The raw data from the video analyses were outputted to files withe copepod name and the day after infection it was observed. These files are in the folder [raw_data](raw_data). The 'compiler' script takes these files and stiches them into one large [data frame](wrangled_data/behav_combined_out.csv).
