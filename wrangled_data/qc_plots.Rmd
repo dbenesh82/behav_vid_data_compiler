@@ -1,0 +1,186 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+knitr::opts_chunk$set(echo = TRUE)
+options(stringsAsFactors = FALSE)
+```
+
+Import data
+
+```{r}
+bd <- read.csv(file = "behav_combined_after_qc.csv", header = TRUE)
+vd <- read.csv(file = "cops_measured_video_comments.csv", header = TRUE)
+```
+
+Select and rename columns
+
+```{r}
+bd <- select(bd, fname, cop_name, day, 
+             slice = Slice.n., dist = Distance, pixel = Pixel.Value, 
+             ok_col_names, ok_col_num, ok_row_num)%>%
+  arrange(day, cop_name, slice)
+
+vd <- select(vd, fname, cop_name = cop, day,
+             recorded_by = by, video_problematic = Ok., video_remarks = remarks)%>%
+  arrange(day, cop_name)
+```
+
+For first observation, replace with NA
+
+```{r}
+bd$dist[bd$slice == 1 & bd$dist == -1] <- NA
+```
+
+
+Let's plot!
+
+```{r}
+ggplot(bd, aes(x = slice, y = dist, group = fname)) +
+  geom_line(alpha = 0.01) + theme_bw()
+```
+```{r}
+ggplot(bd, aes(x = slice, y = dist, group = fname)) +
+  geom_point(alpha = 0.05) + theme_bw()
+```
+
+General...
+
+```{r}
+bd_avg <- group_by(bd, slice)%>%
+  summarize(dist = mean(dist, na.rm=T))
+bd_avg
+ggplot(bd_avg, aes(x=slice, y=dist)) + geom_line()
+```
+
+
+
+```{r}
+bd_counts <- group_by(bd, fname)%>%
+  summarize(n = n())%>%
+  filter(n != 62)
+bd_counts
+ggplot(bd_counts, aes(x = n)) + geom_histogram(binwidth = 1)
+```
+
+Which ones are too many?
+
+```{r}
+g63 <- filter(bd_counts, n > 62)$fname
+```
+
+Copepod 39_1B at day 7 looks suspicious. Probably not worth keeping.
+
+```{r}
+line_plot <- ggplot(bd, aes(x = slice, y = dist, group = fname)) +
+  geom_line(alpha = 0.01) + theme_bw()
+
+line_plot +
+  geom_line(data = filter(bd, fname %in% g63[1]),
+            aes(x = slice, y = dist, group = fname),
+            alpha = 1, color = 'red')
+```
+
+Copepods on plate 74, day 13 seem to have 'jump' in right place. Just need to remove final observation from raw data.
+
+```{r}
+g63
+line_plot +
+  geom_line(data = filter(bd, fname %in% g63[2:8]),
+            aes(x = slice, y = dist, group = fname),
+            alpha = 1, color = 'red')
+```
+
+Now let's look at cops with too few obervations.
+
+```{r}
+g61 <- filter(bd_counts, n < 62)$fname
+
+# make groups based on plate
+g61_1 <- g61[grepl(pattern = "05_.._11", g61)]
+g61_2 <- g61[grepl(pattern = "09_.._5", g61)]
+g61_3 <- g61[grepl(pattern = "18_.._9", g61)]
+g61_4 <- g61[grepl(pattern = "51_.._11", g61)]
+g61_5 <- g61[grepl(pattern = "53_.._9", g61)]
+g61_6 <- g61[grepl(pattern = "61_.._9", g61)]
+g61_misc <- g61[ !(g61 %in% c(g61_1, g61_2, g61_3, g61_4, g61_5, g61_6)) ]
+```
+
+```{r}
+line_plot + 
+  geom_line(data = filter(bd, fname %in% g61_1),
+            aes(x = slice, y = dist, group = fname),
+            alpha = 1, color = 'red')
+```
+Looks ok, probably just the last one is missing.
+
+These next two are missing slice 20, but are probably alright (look at that nice decrease in activity!)
+
+```{r}
+line_plot + 
+  geom_line(data = filter(bd, fname %in% g61_2),
+            aes(x = slice, y = dist, group = fname),
+            alpha = 1, color = 'red')
+```
+
+The next 4 are missing the movement data. The files have x, y coordinates, but not distance. And the x,y coordinates are the same in all files! This is a mistake, because these cops were studied on other days.
+
+```{r}
+line_plot + 
+  geom_line(data = filter(bd, fname %in% g61_3),
+            aes(x = slice, y = dist, group = fname),
+            alpha = 1, color = 'red')
+```
+
+This group looks reasonable; last observation simply missing.
+
+```{r}
+line_plot + 
+  geom_line(data = filter(bd, fname %in% g61_4),
+            aes(x = slice, y = dist, group = fname),
+            alpha = 1, color = 'red')
+```
+
+Also looks reasonable; just last one missing.
+
+```{r}
+line_plot + 
+  geom_line(data = filter(bd, fname %in% g61_5),
+            aes(x = slice, y = dist, group = fname),
+            alpha = 1, color = 'red')
+```
+
+This is plate one with too short video! Seems like jump is at correct place.
+
+```{r}
+line_plot + 
+  geom_line(data = filter(bd, fname %in% g61_6),
+            aes(x = slice, y = dist, group = fname),
+            alpha = 1, color = 'red')
+```
+
+Now those that were not on a plate; miscellaneous problems. Probably need to go through the individual ones...
+
+```{r}
+line_plot + 
+  geom_line(data = filter(bd, fname %in% g61_misc[1:10]),
+            aes(x = slice, y = dist, group = fname),
+            alpha = 1, color = 'red')
+
+```
+
+```{r}
+line_plot + 
+  geom_line(data = filter(bd, fname %in% g61_misc[10:21]),
+            aes(x = slice, y = dist, group = fname),
+            alpha = 1, color = 'red')
+
+```
+
+
+
