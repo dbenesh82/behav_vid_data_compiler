@@ -1,10 +1,10 @@
 ---
 title: "Quality control of G x G behavior data"
-output: html_document
+output: github_document
 ---
 
 ## Backgroud
-I conducted an experiment in which copepods were infected with a tapeworm parasite. Their behavior was recorded seven times post-infection, spanning the development of the parasite in the copepod. I initially explored some quality-control problems with the data [here](Quality_control_behav_data.ipynb). Now, I am making exploratory plots to identify and clarify other problem cases.
+I conducted an experiment in which copepods were infected with a tapeworm parasite. Their behavior was recorded seven times post-infection, spanning the development of the parasite in the copepod. I initially explored some quality-control problems with the data [here](quality_control_behav_data1.ipynb). Now, I am making exploratory plots to identify and clarify other problem cases.
 
 ```{r setup, include=FALSE}
 library(ggplot2)
@@ -78,7 +78,7 @@ ggplot(bd_avg, aes(x=slice, color = as.factor(day))) +
   theme_bw()
 ```
 
-There does not appear to be pronounced differences between observation days, so we'll assume that the above pattern is a reasonable expectation for the problematic copepods. Turning our attention to those problematic copepods...
+There does not appear to be pronounced differences between observation days, so we'll assume that the above pattern is a reasonable expectation for all the problematic copepods. Turning our attention to those problematic copepods...
 
 ```{r}
 bd_counts <- group_by(bd, fname)%>%
@@ -101,7 +101,7 @@ g63 <- filter(bd_counts, n > 62)$fname
 g63
 ```
 
-The first copepod in this list, 39_1B, was identified as suspicious in the [first exploration](Quality_control_behav_data.ipynb) of the data, because it was not in the videography table. When we plot it, we see that the behavior of this copepod look suspicious; there is no clear peak when dropped and it becomes more active after the drop. This makes me skeptical about two other videos, 66_1B_9 and 50_6D_7, that had the same problem: behavioral data without an entry in the videography table. They should probably be removed.
+The first copepod in this list, 39_1B, was identified as suspicious in the [first exploration](quality_control_behav_data1.ipynb) of the data, because it was not in the videography table. When we plot it, we see that the behavior of this copepod look suspicious; there is no clear peak when dropped and it becomes more active after the drop. This makes me skeptical about two other videos, 66_1B_9 and 50_6D_7, that had the same problem: behavioral data without an entry in the videography table. They should probably be removed.
 
 ```{r message=FALSE, warning=FALSE}
 line_plot +
@@ -258,31 +258,49 @@ knitr::kable( arrange(prob_cops_c,fname) )
 
 So what to do? In each case, there are three options: delete the entries, accept the missing data, or reevaluate the video files. 
 
-Deletion seems reasonable for the three cases where the copepods were not in the videography file; they were observed on only one of the seven observation days, presumably by accident. The behavior also seems suspicious. But deletion seems to extreme in cases where a copepod
+Deletion seems reasonable for the three cases where the copepods were not in the videography file; they were observed on only one of the seven observation days, presumably by accident. Their behavior also seems suspicious.
 
 Deletion seems too extreme in most of the other cases, because the recordings usually lined up well with expectations, i.e. the peak was in the right place. Moreover, in the few cases where data were completely missing, this seems to be related to the recording and not the copepod itself, as later recordings of the copepod were not problematic. The best option would be 'correcting' the problems by reevaluating the videos. However, this is not an option in every case, because some videos were accidentally too short (e.g. plate 61 day 9). Thus, it is also worthwhile to categorize each case as simply missing data (e.g. due to recording problems) or as suspicious (e.g. behavior patterns that do not fit expectations). To help make these categorizations, here is a gif that loops through the problematic copepods that have not yet been visualized above.
 
-```{r message=FALSE, warning=FALSE}
-#CAREFUL TAKES AWHILE TO RENDER!
+```{r}
+#TAKES AWHILE TO RENDER! COMMENTED OUT AFTER INITIAL KNIT
 #img <- image_graph(res = 96)
 #bd_misc <- filter(bd, fname %in% g61_misc)
 #datalist <- split(bd_misc, bd_misc$fname)
 #out <- lapply(datalist, function(data){
- # p <- line_plot +
-  #  geom_line(data = data, aes(x = slice, y = dist), alpha = 1, color = 'red') +
-   # annotate(geom = 'text', label = unique(data$fname), x = 50, y = 13, color = 'red')
+#  p <- ggplot(data, aes(x = slice, y = dist)) +
+#    geom_line(alpha = 1, color = 'red') +
+#    scale_y_continuous(limits = c(0, 13)) +
+#    scale_x_continuous(limits = c(0, 63)) +
+#    annotate(geom = 'text', label = unique(data$fname), x = 50, y = 13, color = 'red') +
+#    labs(x = "Time slice", y = "Distance moved") +
+#    theme_bw()
 #  print(p)
 #})
 #dev.off()
 #animation <- image_animate(img, fps = 1)
-#image_write(animation, "animation.gif")
+#image_write(animation, "quality_control_behav_data2_files/figure-markdown_github-ascii_identifiers/qc.gif")
 ```
 
+![](quality_control_behav_data2_files/figure-markdown_github-ascii_identifiers/qc.gif)
 
-![](animation.gif)
+Finally, here is a table summarizing what was done in each case.
 
+```{r}
+prob_cop_c2 <- mutate(prob_cops_c, action = problem)%>%
+  mutate(action = if_else(action == "not in videography table",
+                          "delete",
+                          action))%>%
+  mutate(action = if_else(action == "too many obs",
+                          "remove extra obs",
+                          action))%>%
+  mutate(action = if_else(action == "missing behav data",
+                          "reevalute video or delete",
+                          action))
+#prob_cop_c2
+```
 
-
-
-
+```{r}
+knitr::kable(prob_cop_c2)
+```
 
