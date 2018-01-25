@@ -1,5 +1,5 @@
 ---
-title: "Quality control of G x G behavior data"
+title: "Second round of quality control of G x G behavior data"
 output: github_document
 ---
 
@@ -101,7 +101,7 @@ g63 <- filter(bd_counts, n > 62)$fname
 g63
 ```
 
-The first copepod in this list, 39_1B, was identified as suspicious in the [first exploration](quality_control_behav_data1.ipynb) of the data, because it was not in the videography table. When we plot it, we see that the behavior of this copepod look suspicious; there is no clear peak when dropped and it becomes more active after the drop. This makes me skeptical about two other videos, 66_1B_9 and 50_6D_7, that had the same problem: behavioral data without an entry in the videography table. They should probably be removed.
+The first copepod in this list, 39_1B, was identified as suspicious in the [first exploration](quality_control_behav_data1.ipynb) of the data, because it was not in the videography table. When we plot it, we see that the behavior of this copepod look suspicious; there is no clear peak when dropped and it becomes more active after the drop.
 
 ```{r message=FALSE, warning=FALSE}
 line_plot +
@@ -109,6 +109,8 @@ line_plot +
             aes(x = slice, y = dist, group = fname),
             alpha = 1, color = 'red')
 ```
+
+This makes me skeptical about two other videos, 66_1B_9 and 50_6D_7, that had the same problem: behavioral data without an entry in the videography table. They could probably be removed, since they were only observed on a single day and they were in the least important treatment group.
 
 The other copepods that had too many observations were all from plate 74, day 13. In this case, the peak seems to be in the right place, so I feel confident in simply removing the final observation from the raw data.
 
@@ -262,7 +264,7 @@ Deletion seems reasonable for the three cases where the copepods were not in the
 
 Deletion seems too extreme in most of the other cases, because the recordings usually lined up well with expectations, i.e. the peak was in the right place. Moreover, in the few cases where data were completely missing, this seems to be related to the recording and not the copepod itself, as later recordings of the copepod were not problematic. The best option would be 'correcting' the problems by reevaluating the videos. However, this is not an option in every case, because some videos were accidentally too short (e.g. plate 61 day 9). Thus, it is also worthwhile to categorize each case as simply missing data (e.g. due to recording problems) or as suspicious (e.g. behavior patterns that do not fit expectations). To help make these categorizations, here is a gif that loops through the problematic copepods that have not yet been visualized above.
 
-```{r}
+```{r makegif}
 #TAKES AWHILE TO RENDER! COMMENTED OUT AFTER INITIAL KNIT
 #img <- image_graph(res = 96)
 #bd_misc <- filter(bd, fname %in% g61_misc)
@@ -294,8 +296,8 @@ prob_cop_c2 <- mutate(prob_cops_c, action = problem)%>%
   mutate(action = if_else(action == "too many obs",
                           "remove extra obs",
                           action))%>%
-  mutate(action = if_else(action == "missing behav data",
-                          "reevalute video or delete",
+  mutate(action = if_else( grepl("missing", action),
+                          "reevalute video or deal with missing data",
                           action))
 #prob_cop_c2
 ```
