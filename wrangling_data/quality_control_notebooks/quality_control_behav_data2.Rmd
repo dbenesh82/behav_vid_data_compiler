@@ -17,8 +17,8 @@ options(stringsAsFactors = FALSE)
 
 ```{r}
 # import data
-bd <- read.csv(file = "behav_combined_after_qc.csv", header = TRUE)
-vd <- read.csv(file = "cops_measured_video_comments.csv", header = TRUE)
+bd <- read.csv(file = "../data/behav_combined_after_qc1.csv", header = TRUE)
+vd <- read.csv(file = "../data/cops_measured_video_comments.csv", header = TRUE)
 ```
 
 ```{r message=FALSE, warning=FALSE}

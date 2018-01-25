@@ -42,4 +42,4 @@ for d in dirs:
 
 
 # write to file       
-master_df.to_csv("wrangled_data/behav_combined_after_qc.csv")
+master_df.to_csv("wrangling_data/data/behav_combined_after_qc2.csv")
