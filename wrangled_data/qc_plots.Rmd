@@ -1,106 +1,137 @@
 ---
-title: "Untitled"
+title: "Quality control of G x G behavior data"
 output: html_document
 ---
+
+## Backgroud
+I conducted an experiment in which copepods were infected with a tapeworm parasite. Their behavior was recorded seven times post-infection, spanning the development of the parasite in the copepod. I initially explored some quality-control problems with the data [here](Quality_control_behav_data.ipynb). Now, I am making exploratory plots to identify and clarify other problem cases.
 
 ```{r setup, include=FALSE}
 library(ggplot2)
 library(dplyr)
 library(tidyr)
-knitr::opts_chunk$set(echo = TRUE)
+library(magick)
+knitr::opts_chunk$set(echo = FALSE)
 options(stringsAsFactors = FALSE)
 ```
 
-Import data
-
 ```{r}
+# import data
 bd <- read.csv(file = "behav_combined_after_qc.csv", header = TRUE)
 vd <- read.csv(file = "cops_measured_video_comments.csv", header = TRUE)
 ```
 
-Select and rename columns
-
-```{r}
+```{r message=FALSE, warning=FALSE}
+# Select and rename columns
 bd <- select(bd, fname, cop_name, day, 
              slice = Slice.n., dist = Distance, pixel = Pixel.Value, 
              ok_col_names, ok_col_num, ok_row_num)%>%
   arrange(day, cop_name, slice)
 
+# for first observation of every video, no 'distance moved' can be calculated; replace with NA
+bd$dist[bd$slice == 1 & bd$dist == -1] <- NA
+
 vd <- select(vd, fname, cop_name = cop, day,
              recorded_by = by, video_problematic = Ok., video_remarks = remarks)%>%
   arrange(day, cop_name)
+bd <- left_join(bd, vd) # combine behav and videography data
 ```
 
-For first observation, replace with NA
+Here is what the data looks like for one copepod on one observation day. Each copepod has a unique identifier `cop_name`, and the file name `fname` is a combination of `cop_name` and day-post-exposure `day`. Copepod behavior was tracked over two minutes, with copepod position being recorded every two seconds, hence the 62 `slices`. The response variable is the distance moved by the copepod `dist`. The `pixel` variable records the darkness of the copepod on the video, but this probably has more to do with vagaries in the lighting conditions rather than anything of biological significance. The final variables (`ok_col_names`, `ok_col_num`, `ok_row_num`, `video_problematic`) record potentially problematic cases.
 
-```{r}
-bd$dist[bd$slice == 1 & bd$dist == -1] <- NA
+```{r results='asis'}
+knitr::kable( filter(bd, fname == "01_1D_5"), caption = "Data for one recording" )
 ```
 
+So now let's **plot**! First, we'll look at what each copepod did over the two minutes of observation.
 
-Let's plot!
-
-```{r}
-ggplot(bd, aes(x = slice, y = dist, group = fname)) +
+```{r message=FALSE, warning=FALSE}
+line_plot <- ggplot(bd, aes(x = slice, y = dist, group = fname)) +
+  labs(x = "Time slice", y = "Distance moved") +
   geom_line(alpha = 0.01) + theme_bw()
-```
-```{r}
-ggplot(bd, aes(x = slice, y = dist, group = fname)) +
-  geom_point(alpha = 0.05) + theme_bw()
+line_plot
 ```
 
-General...
+The only clear pattern is the peak in copepod movement around a minute in (slice 32). This was part of the experiment. Copepods were in well-plates and the plates were dropped a couple mm in a standardized way to 'shock' or 'surprise' the copepods and then observe their reaction and recovery. The typical pattern can be seen more clearly when we just look at the average.
 
 ```{r}
-bd_avg <- group_by(bd, slice)%>%
-  summarize(dist = mean(dist, na.rm=T))
-bd_avg
-ggplot(bd_avg, aes(x=slice, y=dist)) + geom_line()
+# average distance moved for each slice
+bd_avg <- group_by(bd, slice)%>% 
+  summarize(dist_avg = mean(dist, na.rm=T))
+
+ggplot(bd_avg, aes(x=slice)) +
+  geom_line(aes(y = dist_avg)) +
+  labs(x = "Time slice", y = "Distance moved") +
+  theme_bw()
 ```
 
+After being dropped, copepods tend to remain still, which is a typical anti-predator response. They then slowly begin moving again, eventually reaching the level of movement seen previous to the 'shock'. 
 
+```{r message=FALSE, warning=FALSE}
+# average distance moved for each slice, separated by day
+bd_avg <- group_by(bd, slice, day)%>% 
+  summarize(dist_avg = mean(dist, na.rm=T))
+
+ggplot(bd_avg, aes(x=slice, color = as.factor(day))) +
+  geom_line(aes(y = dist_avg)) +
+  labs(x = "Time slice", y = "Distance moved", color = "Obs Day") +
+  theme_bw()
+```
+
+There does not appear to be pronounced differences between observation days, so we'll assume that the above pattern is a reasonable expectation for the problematic copepods. Turning our attention to those problematic copepods...
 
 ```{r}
 bd_counts <- group_by(bd, fname)%>%
   summarize(n = n())%>%
-  filter(n != 62)
-bd_counts
-ggplot(bd_counts, aes(x = n)) + geom_histogram(binwidth = 1)
+  filter(n != 62) # copepods with the wrong number of observations
 ```
 
-Which ones are too many?
+There are `r length(bd_counts$fname)` copepods with the wrong number of observations. Here is a histogram of their distribution. A group of copepods with less than 50 observations stands out; this was due to a mistake with the video recording (too short). In most cases, just one observation is missing (61 instead of 62).
+
+```{r}
+ggplot(bd_counts, aes(x = n)) + 
+  geom_histogram(binwidth = 1) +
+  labs(x = "observations") + theme_bw()
+```
+
+A small group of copepods was characterized by too many observations.
 
 ```{r}
 g63 <- filter(bd_counts, n > 62)$fname
+g63
 ```
 
-Copepod 39_1B at day 7 looks suspicious. Probably not worth keeping.
+The first copepod in this list, 39_1B, was identified as suspicious in the [first exploration](Quality_control_behav_data.ipynb) of the data, because it was not in the videography table. When we plot it, we see that the behavior of this copepod look suspicious; there is no clear peak when dropped and it becomes more active after the drop. This makes me skeptical about two other videos, 66_1B_9 and 50_6D_7, that had the same problem: behavioral data without an entry in the videography table. They should probably be removed.
 
-```{r}
-line_plot <- ggplot(bd, aes(x = slice, y = dist, group = fname)) +
-  geom_line(alpha = 0.01) + theme_bw()
-
+```{r message=FALSE, warning=FALSE}
 line_plot +
   geom_line(data = filter(bd, fname %in% g63[1]),
             aes(x = slice, y = dist, group = fname),
             alpha = 1, color = 'red')
 ```
 
-Copepods on plate 74, day 13 seem to have 'jump' in right place. Just need to remove final observation from raw data.
+The other copepods that had too many observations were all from plate 74, day 13. In this case, the peak seems to be in the right place, so I feel confident in simply removing the final observation from the raw data.
 
-```{r}
-g63
+```{r message=FALSE, warning=FALSE}
 line_plot +
   geom_line(data = filter(bd, fname %in% g63[2:8]),
             aes(x = slice, y = dist, group = fname),
             alpha = 1, color = 'red')
 ```
 
-Now let's look at cops with too few obervations.
-
 ```{r}
 g61 <- filter(bd_counts, n < 62)$fname
+```
 
+Now let's look at the copepods with too few obervations. There are quite a few (n = `r length(g61)`), so it's a good idea to look for groups that likely have a common underlying cause, such as being on the same plate like copepods from plate 5, day 11 (`05_**_11`) or plate 61, day 9 (`61_**_9`).
+
+```{r}
+g61 # cops with too few obs
+```
+
+I'll plot these groups separately to diagnose the potential problem, starting with plate 5 on day 11.
+
+```{r}
 # make groups based on plate
 g61_1 <- g61[grepl(pattern = "05_.._11", g61)]
 g61_2 <- g61[grepl(pattern = "09_.._5", g61)]
@@ -111,76 +142,147 @@ g61_6 <- g61[grepl(pattern = "61_.._9", g61)]
 g61_misc <- g61[ !(g61 %in% c(g61_1, g61_2, g61_3, g61_4, g61_5, g61_6)) ]
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 line_plot + 
   geom_line(data = filter(bd, fname %in% g61_1),
             aes(x = slice, y = dist, group = fname),
             alpha = 1, color = 'red')
 ```
-Looks ok, probably just the last one is missing.
 
-These next two are missing slice 20, but are probably alright (look at that nice decrease in activity!)
+The pattern looks ok, with the peak being in the correct place and reduced movement thereafter. Presumably, the final observation is simply missing in these cases.
 
-```{r}
+The next group, plate 9, day 5, also seems reasonable; look at the clear decrease in activity in the second half of observation. When I pulled up the raw data for these cases, they were missing slice 20 for some reason.
+
+```{r message=FALSE, warning=FALSE}
 line_plot + 
   geom_line(data = filter(bd, fname %in% g61_2),
             aes(x = slice, y = dist, group = fname),
             alpha = 1, color = 'red')
 ```
 
-The next 4 are missing the movement data. The files have x, y coordinates, but not distance. And the x,y coordinates are the same in all files! This is a mistake, because these cops were studied on other days.
+The next 4 cases are for plate 18, day 9. Strangely, they are missing movement data entirely!
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 line_plot + 
   geom_line(data = filter(bd, fname %in% g61_3),
             aes(x = slice, y = dist, group = fname),
             alpha = 1, color = 'red')
 ```
 
-This group looks reasonable; last observation simply missing.
+This seems to be a mistake processing the videos. The files have x-y coordinates, but not distances, and the x-y coordinates are the same in all files. These copepods were recorded on other days, so this seems to be a one-time mistake. But it made me wonder if other copepods were missing behavior data. Besides those on plate 18, just one recording is missing data, 39_2B_7. It was also recorded on other days, so it seems to be a mistake with video processing.
 
 ```{r}
+unique(filter(bd, is.na(dist), slice != 1)$fname)
+```
+
+Next group: plate 51, day 11. Here, the peak seems to be in the correct spot, suggesting the last observation is just missing.
+
+```{r message=FALSE, warning=FALSE}
 line_plot + 
   geom_line(data = filter(bd, fname %in% g61_4),
             aes(x = slice, y = dist, group = fname),
             alpha = 1, color = 'red')
 ```
 
-Also looks reasonable; just last one missing.
+Same for the next group: plate 53, day 9. The pattern seems reasonable, so presumably the final observation is just missing by accident.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 line_plot + 
   geom_line(data = filter(bd, fname %in% g61_5),
             aes(x = slice, y = dist, group = fname),
             alpha = 1, color = 'red')
 ```
 
-This is plate one with too short video! Seems like jump is at correct place.
+The next group, plate 61 day 9, is the plate with only 47 observations, because the video was too short. Still, the peak seems to be in the correct place, suggesting this group should be retained and treated as having missing data, rather than deleted outright.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 line_plot + 
   geom_line(data = filter(bd, fname %in% g61_6),
             aes(x = slice, y = dist, group = fname),
             alpha = 1, color = 'red')
 ```
 
-Now those that were not on a plate; miscellaneous problems. Probably need to go through the individual ones...
+There are another `r length(g61_misc)` copepods with missing observations, but they are not obviously part of a group. Presumably, they each have their own idiosyncratic reason for missing data.
+
+Nonetheless, at this point, I think the problematic cases fall into a couple of categories.
+
+1. *Copepods not in videography table*
+  + n = 3. Suspicious behavior pattern, so delete these entries.
+2. *Too many observations*
+  + n = 7. Few look suspicious, delete excessive observations.
+3. *Too few observations*
+  + n = 38. Missing final observations, often line up well with expectations, so either accept missing data or reevaluate video files.
+  + n = 22. Missing internal observations, but often line up with expectations, suggestive of video-processing error. Either accept as missing data, or reevaluate video files.
+4. *Missing all movement data*
+  + n = 5. Reevaluate video files or accept as missing data.
 
 ```{r}
-line_plot + 
-  geom_line(data = filter(bd, fname %in% g61_misc[1:10]),
-            aes(x = slice, y = dist, group = fname),
-            alpha = 1, color = 'red')
+# create missing cop df
+# videography missing
+prob_cops <- data.frame( fname = unique(bd$fname[which( !(bd$fname %in% vd$fname) )]),
+                         problem = "not in videography table")
 
+# too many obs
+prob_cops2 <- data.frame( fname = g63,
+                          problem = "too many obs")
+
+# missing all
+prob_cops3 <- data.frame( fname = unique(filter(bd, is.na(dist), slice != 1)$fname),
+                          problem = "missing behav data")
+
+# too few obs...
+tf <- filter(bd, fname %in% g61)%>%
+  select(fname, slice)%>%
+  mutate(slice_test = lead(slice) - slice)
+
+#...missing internal...
+prob_cops4 <- filter(tf, slice_test > 1)%>%
+  mutate(problem = if_else(slice_test == 2,
+                           paste("missing", slice + 1),
+                           paste("missing", slice + 1, "to", slice + slice_test - 1)))%>%
+  select(fname, problem)
+
+#...missing final
+prob_cops5 <- filter(tf, slice_test < 0, slice_test != -61)%>%
+  mutate(problem = "missing final obs")%>%
+  select(fname, problem)
+
+prob_cops_c <- rbind(prob_cops, prob_cops2, prob_cops3, prob_cops4, prob_cops5)
 ```
 
-```{r}
-line_plot + 
-  geom_line(data = filter(bd, fname %in% g61_misc[10:21]),
-            aes(x = slice, y = dist, group = fname),
-            alpha = 1, color = 'red')
+Here's a table summarizing the copepod files with these problems.
 
+```{r results='asis'}
+knitr::kable( arrange(prob_cops_c,fname) )
 ```
+
+So what to do? In each case, there are three options: delete the entries, accept the missing data, or reevaluate the video files. 
+
+Deletion seems reasonable for the three cases where the copepods were not in the videography file; they were observed on only one of the seven observation days, presumably by accident. The behavior also seems suspicious. But deletion seems to extreme in cases where a copepod
+
+Deletion seems too extreme in most of the other cases, because the recordings usually lined up well with expectations, i.e. the peak was in the right place. Moreover, in the few cases where data were completely missing, this seems to be related to the recording and not the copepod itself, as later recordings of the copepod were not problematic. The best option would be 'correcting' the problems by reevaluating the videos. However, this is not an option in every case, because some videos were accidentally too short (e.g. plate 61 day 9). Thus, it is also worthwhile to categorize each case as simply missing data (e.g. due to recording problems) or as suspicious (e.g. behavior patterns that do not fit expectations). To help make these categorizations, here is a gif that loops through the problematic copepods that have not yet been visualized above.
+
+```{r message=FALSE, warning=FALSE}
+#CAREFUL TAKES AWHILE TO RENDER!
+#img <- image_graph(res = 96)
+#bd_misc <- filter(bd, fname %in% g61_misc)
+#datalist <- split(bd_misc, bd_misc$fname)
+#out <- lapply(datalist, function(data){
+ # p <- line_plot +
+  #  geom_line(data = data, aes(x = slice, y = dist), alpha = 1, color = 'red') +
+   # annotate(geom = 'text', label = unique(data$fname), x = 50, y = 13, color = 'red')
+#  print(p)
+#})
+#dev.off()
+#animation <- image_animate(img, fps = 1)
+#image_write(animation, "animation.gif")
+```
+
+
+![](animation.gif)
+
+
+
 
 
 
