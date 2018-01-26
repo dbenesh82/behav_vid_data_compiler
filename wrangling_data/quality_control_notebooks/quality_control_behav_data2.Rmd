@@ -252,17 +252,9 @@ prob_cops5 <- filter(tf, slice_test < 0, slice_test != -61)%>%
 prob_cops_c <- rbind(prob_cops, prob_cops2, prob_cops3, prob_cops4, prob_cops5)
 ```
 
-Here's a table summarizing the copepod files with these problems.
+So what to do? In each case, there are three options: delete the entries, accept the missing data, or reevaluate the video files. Deletion seems reasonable for the three cases where the copepods were not in the videography file; they were observed on only one of the seven observation days, presumably by accident. Their behavior also seems suspicious.
 
-```{r results='asis'}
-knitr::kable( arrange(prob_cops_c,fname) )
-```
-
-So what to do? In each case, there are three options: delete the entries, accept the missing data, or reevaluate the video files. 
-
-Deletion seems reasonable for the three cases where the copepods were not in the videography file; they were observed on only one of the seven observation days, presumably by accident. Their behavior also seems suspicious.
-
-Deletion seems too extreme in most of the other cases, because the recordings usually lined up well with expectations, i.e. the peak was in the right place. Moreover, in the few cases where data were completely missing, this seems to be related to the recording and not the copepod itself, as later recordings of the copepod were not problematic. The best option would be 'correcting' the problems by reevaluating the videos. However, this is not an option in every case, because some videos were accidentally too short (e.g. plate 61 day 9). Thus, it is also worthwhile to categorize each case as simply missing data (e.g. due to recording problems) or as suspicious (e.g. behavior patterns that do not fit expectations). To help make these categorizations, here is a gif that loops through the problematic copepods that have not yet been visualized above.
+But deletion seems too extreme in most of the other cases, because the recordings usually lined up well with expectations, i.e. the peak was in the right place. Moreover, in the few cases where data were completely missing, this seems to be related to the recording and not the copepod itself, as later recordings of the copepod were not problematic. The best remedy would be 'correcting' the problems by reevaluating the videos. However, this is not an option in every case, because some videos were accidentally too short (e.g. plate 61 day 9). Thus, it is also worthwhile to categorize each case as simply missing data (e.g. due to recording problems) or as suspicious (e.g. behavior patterns that do not fit expectations). To help make these categorizations, here is a gif that loops through the problematic copepods that were not visualized above.
 
 ```{r makegif}
 #TAKES AWHILE TO RENDER! COMMENTED OUT AFTER INITIAL KNIT
@@ -286,23 +278,77 @@ Deletion seems too extreme in most of the other cases, because the recordings us
 
 ![](quality_control_behav_data2_files/figure-markdown_github-ascii_identifiers/qc.gif)
 
-Finally, here is a table summarizing what was done in each case.
+Often, the peak appears to be in the right place, but not always. Sometimes, activity increases with time, unlike expecations. I think to be confident in these problematic cases, it would be best to reevaluate the video files.
+
+So we have explored the behavior patterns in recordings with too many or too few observations. But what about recordings with the correct number of observations? They could have incorrectly labeled time slices. For example, a recording might have the correct 62 observations, but only 61 unique slice/time values, due to a slice being duplicated. Let's check for recordings with this problem. There are 21 such cases. 
 
 ```{r}
-prob_cop_c2 <- mutate(prob_cops_c, action = problem)%>%
-  mutate(action = if_else(action == "not in videography table",
+# id cases with slices missing
+dup <- select(bd, fname, slice)%>%
+  mutate(slice_test = lead(slice) - slice)%>%
+  filter(slice_test == 0)%>%
+  mutate(problem = paste("duplicate slice", slice) )%>%
+  mutate(matcher = paste(fname, slice))
+
+knitr::kable( dup%>%select(fname, problem)%>%arrange(fname),
+              caption = "Duplicated slices")
+```
+
+There is also no obvious pattern. The duplications occur in different plates, on different days, and in different slices, which is suggestive of human error rather than anything systematic. An obvious question is whether behavior values are the between duplicated slices, suggesting a whole row in the raw data was simply copied. 
+
+```{r}
+tf <- mutate(bd, matcher = paste(fname, slice))%>%
+  filter(matcher %in% dup$matcher)%>%
+  select(fname, duplicate_slice = slice, dist)%>%
+  mutate(i = rep(1:2, times = 21))
+tf <- tf%>%spread(key = i, value = dist)
+
+knitr::kable( head(tf, n = 10), caption = "Behavior in ten slice duplications")
+```
+
+This was not the case. Activity clearly differed among the multiple measurements on a single slice; compare column `1` vs `2`. This suggests that slice was mislabeled for some reason in the raw data, not that entire rows were copied. I think the best way to remedy these cases, would be to re-evaluate a subsample of the videos to check if the duplicate rows are simply mislabeled.
+
+# Conclusions
+
+```{r}
+# combine cases with wrong number of rows and cases with duplications
+prob_cop_c2 <- bind_rows(prob_cops_c, select(dup, fname, problem))%>%
+  mutate( i = if_else(duplicated(fname), 2, 1))
+prob_cop_c2 <- prob_cop_c2%>%
+  spread(key = i, value = problem)%>%
+  rename(problem1 = `1`, problem2 = `2`)
+```
+We have identified some problems (wrong number of rows, missing observations, duplicate slices) and suggested solutions (deletion, reevaluate videos, accept as missing, etc). In total, `r length(unique(prob_cop_c2))` recordings were considered problematic. This last table summarizes the action taken in each case.
+
+```{r}
+# add 'action' column describing what was done in each case
+prob_cop_c2 <- mutate(prob_cop_c2, action = problem1)%>%
+  mutate(action = if_else( problem1 == "not in videography table" | problem2 == "not in videography table",
                           "delete",
                           action))%>%
-  mutate(action = if_else(action == "too many obs",
-                          "remove extra obs",
+  mutate(action = if_else( problem1 == "too many obs",
+                          "remove extra obs from raw data",
                           action))%>%
-  mutate(action = if_else( grepl("missing", action),
+  mutate(action = if_else( grepl("missing", problem1),
                           "reevalute video or deal with missing data",
-                          action))
-#prob_cop_c2
+                          action))%>%
+  mutate(action = if_else( grepl("duplicate", problem1),
+                           "reevaluate video, revise slice values",
+                           action))%>%
+  mutate(action = if_else( grepl("61_.._9", fname),
+                           "accept missing 15 final obs",
+                           action))
+
 ```
 
 ```{r}
-knitr::kable(prob_cop_c2)
+
+knitr::kable(
+  mutate(prob_cop_c2, problem = 
+           if_else( !is.na(problem2),
+                    paste(problem1, problem2, sep = "; "),
+                    problem1))%>%
+    select(fname, problem, action)
+)
 ```
 
