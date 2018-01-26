@@ -1,4 +1,4 @@
-Quality control of G x G behavior data
+Second round of quality control of G x G behavior data
 ================
 
 Backgroud
@@ -96,9 +96,11 @@ A small group of copepods was characterized by too many observations.
     ## [1] "39_1B_7"  "74_1B_13" "74_1C_13" "74_2B_13" "74_3A_13" "74_3D_13"
     ## [7] "74_4A_13" "74_5D_13"
 
-The first copepod in this list, 39\_1B, was identified as suspicious in the [first exploration](quality_control_behav_data1.ipynb) of the data, because it was not in the videography table. When we plot it, we see that the behavior of this copepod look suspicious; there is no clear peak when dropped and it becomes more active after the drop. This makes me skeptical about two other videos, 66\_1B\_9 and 50\_6D\_7, that had the same problem: behavioral data without an entry in the videography table. They should probably be removed.
+The first copepod in this list, 39\_1B, was identified as suspicious in the [first exploration](quality_control_behav_data1.ipynb) of the data, because it was not in the videography table. When we plot it, we see that the behavior of this copepod look suspicious; there is no clear peak when dropped and it becomes more active after the drop.
 
 ![](quality_control_behav_data2_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-10-1.png)
+
+This makes me skeptical about two other videos, 66\_1B\_9 and 50\_6D\_7, that had the same problem: behavioral data without an entry in the videography table. They could probably be removed, since they were only observed on a single day and they were in the least important treatment group.
 
 The other copepods that had too many observations were all from plate 74, day 13. In this case, the peak seems to be in the right place, so I feel confident in simply removing the final observation from the raw data.
 
@@ -169,174 +171,151 @@ Nonetheless, at this point, I think the problematic cases fall into a couple of 
 
 -   n = 5. Reevaluate video files or accept as missing data.
 
-Here's a table summarizing the copepod files with these problems.
+So what to do? In each case, there are three options: delete the entries, accept the missing data, or reevaluate the video files. Deletion seems reasonable for the three cases where the copepods were not in the videography file; they were observed on only one of the seven observation days, presumably by accident. Their behavior also seems suspicious.
 
-| fname      | problem                  |
-|:-----------|:-------------------------|
-| 05\_1D\_11 | missing final obs        |
-| 05\_2C\_11 | missing final obs        |
-| 05\_2D\_11 | missing final obs        |
-| 05\_3B\_11 | missing final obs        |
-| 05\_4B\_11 | missing final obs        |
-| 05\_4D\_11 | missing final obs        |
-| 05\_5C\_11 | missing final obs        |
-| 05\_6B\_11 | missing final obs        |
-| 05\_6C\_11 | missing final obs        |
-| 09\_1C\_5  | missing 20               |
-| 09\_5D\_5  | missing 20               |
-| 09\_5D\_7  | missing 35 to 36         |
-| 12\_5D\_11 | missing 23 to 31         |
-| 14\_4D\_5  | missing 55               |
-| 18\_4A\_9  | missing behav data       |
-| 18\_4A\_9  | missing final obs        |
-| 18\_5B\_9  | missing behav data       |
-| 18\_5B\_9  | missing final obs        |
-| 18\_5D\_9  | missing behav data       |
-| 18\_5D\_9  | missing final obs        |
-| 18\_6C\_9  | missing behav data       |
-| 18\_6C\_9  | missing final obs        |
-| 24\_2C\_5  | missing 44               |
-| 25\_3A\_11 | missing 15 to 24         |
-| 26\_6C\_9  | missing 24               |
-| 27\_1D\_5  | missing 35 to 37         |
-| 28\_3C\_11 | missing 26 to 31         |
-| 29\_1C\_17 | missing 9                |
-| 32\_1A\_13 | missing 42               |
-| 32\_6A\_5  | missing 41               |
-| 33\_2D\_5  | missing 54 to 55         |
-| 35\_2D\_7  | missing 16               |
-| 35\_6B\_17 | missing 28               |
-| 39\_1B\_7  | not in videography table |
-| 39\_1B\_7  | too many obs             |
-| 39\_2B\_7  | missing behav data       |
-| 39\_2B\_7  | missing final obs        |
-| 39\_6B\_5  | missing 26               |
-| 49\_1C\_13 | missing 53               |
-| 50\_6D\_7  | not in videography table |
-| 51\_1D\_11 | missing final obs        |
-| 51\_3D\_11 | missing final obs        |
-| 51\_4B\_11 | missing final obs        |
-| 51\_4C\_11 | missing final obs        |
-| 51\_5B\_11 | missing final obs        |
-| 51\_6D\_11 | missing final obs        |
-| 52\_1A\_17 | missing 32               |
-| 53\_2A\_9  | missing final obs        |
-| 53\_3C\_9  | missing final obs        |
-| 53\_4B\_9  | missing final obs        |
-| 53\_5B\_9  | missing final obs        |
-| 53\_6A\_9  | missing final obs        |
-| 53\_6D\_9  | missing final obs        |
-| 61\_1A\_9  | missing final obs        |
-| 61\_1B\_9  | missing final obs        |
-| 61\_1D\_9  | missing final obs        |
-| 61\_2A\_9  | missing final obs        |
-| 61\_2C\_9  | missing final obs        |
-| 61\_2D\_9  | missing final obs        |
-| 61\_3B\_9  | missing final obs        |
-| 61\_4A\_9  | missing final obs        |
-| 61\_4B\_9  | missing final obs        |
-| 61\_5B\_9  | missing final obs        |
-| 61\_5C\_9  | missing final obs        |
-| 61\_6A\_9  | missing final obs        |
-| 61\_6B\_9  | missing final obs        |
-| 63\_1C\_13 | missing 30               |
-| 63\_3B\_7  | missing 53               |
-| 66\_1B\_9  | not in videography table |
-| 66\_6B\_11 | missing 26 to 27         |
-| 74\_1B\_13 | too many obs             |
-| 74\_1C\_13 | too many obs             |
-| 74\_2B\_13 | too many obs             |
-| 74\_3A\_13 | too many obs             |
-| 74\_3D\_13 | too many obs             |
-| 74\_4A\_13 | too many obs             |
-| 74\_5D\_13 | too many obs             |
-
-So what to do? In each case, there are three options: delete the entries, accept the missing data, or reevaluate the video files.
-
-Deletion seems reasonable for the three cases where the copepods were not in the videography file; they were observed on only one of the seven observation days, presumably by accident. Their behavior also seems suspicious.
-
-Deletion seems too extreme in most of the other cases, because the recordings usually lined up well with expectations, i.e. the peak was in the right place. Moreover, in the few cases where data were completely missing, this seems to be related to the recording and not the copepod itself, as later recordings of the copepod were not problematic. The best option would be 'correcting' the problems by reevaluating the videos. However, this is not an option in every case, because some videos were accidentally too short (e.g. plate 61 day 9). Thus, it is also worthwhile to categorize each case as simply missing data (e.g. due to recording problems) or as suspicious (e.g. behavior patterns that do not fit expectations). To help make these categorizations, here is a gif that loops through the problematic copepods that have not yet been visualized above.
+But deletion seems too extreme in most of the other cases, because the recordings usually lined up well with expectations, i.e. the peak was in the right place. Moreover, in the few cases where data were completely missing, this seems to be related to the recording and not the copepod itself, as later recordings of the copepod were not problematic. The best remedy would be 'correcting' the problems by reevaluating the videos. However, this is not an option in every case, because some videos were accidentally too short (e.g. plate 61 day 9). Thus, it is also worthwhile to categorize each case as simply missing data (e.g. due to recording problems) or as suspicious (e.g. behavior patterns that do not fit expectations). To help make these categorizations, here is a gif that loops through the problematic copepods that were not visualized above.
 
 ![](quality_control_behav_data2_files/figure-markdown_github-ascii_identifiers/qc.gif)
 
-Finally, here is a table summarizing what was done in each case.
+Often, the peak appears to be in the right place, but not always. Sometimes, activity increases with time, unlike expecations. I think to be confident in these problematic cases, it would be best to reevaluate the video files.
 
-| fname      | problem                  | action                    |
-|:-----------|:-------------------------|:--------------------------|
-| 39\_1B\_7  | not in videography table | delete                    |
-| 50\_6D\_7  | not in videography table | delete                    |
-| 66\_1B\_9  | not in videography table | delete                    |
-| 39\_1B\_7  | too many obs             | remove extra obs          |
-| 74\_1B\_13 | too many obs             | remove extra obs          |
-| 74\_1C\_13 | too many obs             | remove extra obs          |
-| 74\_2B\_13 | too many obs             | remove extra obs          |
-| 74\_3A\_13 | too many obs             | remove extra obs          |
-| 74\_3D\_13 | too many obs             | remove extra obs          |
-| 74\_4A\_13 | too many obs             | remove extra obs          |
-| 74\_5D\_13 | too many obs             | remove extra obs          |
-| 39\_2B\_7  | missing behav data       | reevalute video or delete |
-| 18\_4A\_9  | missing behav data       | reevalute video or delete |
-| 18\_5B\_9  | missing behav data       | reevalute video or delete |
-| 18\_5D\_9  | missing behav data       | reevalute video or delete |
-| 18\_6C\_9  | missing behav data       | reevalute video or delete |
-| 09\_1C\_5  | missing 20               | missing 20                |
-| 09\_5D\_5  | missing 20               | missing 20                |
-| 14\_4D\_5  | missing 55               | missing 55                |
-| 24\_2C\_5  | missing 44               | missing 44                |
-| 27\_1D\_5  | missing 35 to 37         | missing 35 to 37          |
-| 32\_6A\_5  | missing 41               | missing 41                |
-| 33\_2D\_5  | missing 54 to 55         | missing 54 to 55          |
-| 39\_6B\_5  | missing 26               | missing 26                |
-| 09\_5D\_7  | missing 35 to 36         | missing 35 to 36          |
-| 35\_2D\_7  | missing 16               | missing 16                |
-| 63\_3B\_7  | missing 53               | missing 53                |
-| 26\_6C\_9  | missing 24               | missing 24                |
-| 12\_5D\_11 | missing 23 to 31         | missing 23 to 31          |
-| 25\_3A\_11 | missing 15 to 24         | missing 15 to 24          |
-| 28\_3C\_11 | missing 26 to 31         | missing 26 to 31          |
-| 66\_6B\_11 | missing 26 to 27         | missing 26 to 27          |
-| 32\_1A\_13 | missing 42               | missing 42                |
-| 49\_1C\_13 | missing 53               | missing 53                |
-| 63\_1C\_13 | missing 30               | missing 30                |
-| 29\_1C\_17 | missing 9                | missing 9                 |
-| 35\_6B\_17 | missing 28               | missing 28                |
-| 52\_1A\_17 | missing 32               | missing 32                |
-| 39\_2B\_7  | missing final obs        | missing final obs         |
-| 18\_4A\_9  | missing final obs        | missing final obs         |
-| 18\_5B\_9  | missing final obs        | missing final obs         |
-| 18\_5D\_9  | missing final obs        | missing final obs         |
-| 18\_6C\_9  | missing final obs        | missing final obs         |
-| 53\_2A\_9  | missing final obs        | missing final obs         |
-| 53\_3C\_9  | missing final obs        | missing final obs         |
-| 53\_4B\_9  | missing final obs        | missing final obs         |
-| 53\_5B\_9  | missing final obs        | missing final obs         |
-| 53\_6A\_9  | missing final obs        | missing final obs         |
-| 53\_6D\_9  | missing final obs        | missing final obs         |
-| 61\_1A\_9  | missing final obs        | missing final obs         |
-| 61\_1B\_9  | missing final obs        | missing final obs         |
-| 61\_1D\_9  | missing final obs        | missing final obs         |
-| 61\_2A\_9  | missing final obs        | missing final obs         |
-| 61\_2C\_9  | missing final obs        | missing final obs         |
-| 61\_2D\_9  | missing final obs        | missing final obs         |
-| 61\_3B\_9  | missing final obs        | missing final obs         |
-| 61\_4A\_9  | missing final obs        | missing final obs         |
-| 61\_4B\_9  | missing final obs        | missing final obs         |
-| 61\_5B\_9  | missing final obs        | missing final obs         |
-| 61\_5C\_9  | missing final obs        | missing final obs         |
-| 61\_6A\_9  | missing final obs        | missing final obs         |
-| 61\_6B\_9  | missing final obs        | missing final obs         |
-| 05\_1D\_11 | missing final obs        | missing final obs         |
-| 05\_2C\_11 | missing final obs        | missing final obs         |
-| 05\_2D\_11 | missing final obs        | missing final obs         |
-| 05\_3B\_11 | missing final obs        | missing final obs         |
-| 05\_4B\_11 | missing final obs        | missing final obs         |
-| 05\_4D\_11 | missing final obs        | missing final obs         |
-| 05\_5C\_11 | missing final obs        | missing final obs         |
-| 05\_6B\_11 | missing final obs        | missing final obs         |
-| 05\_6C\_11 | missing final obs        | missing final obs         |
-| 51\_1D\_11 | missing final obs        | missing final obs         |
-| 51\_3D\_11 | missing final obs        | missing final obs         |
-| 51\_4B\_11 | missing final obs        | missing final obs         |
-| 51\_4C\_11 | missing final obs        | missing final obs         |
-| 51\_5B\_11 | missing final obs        | missing final obs         |
-| 51\_6D\_11 | missing final obs        | missing final obs         |
+So we have explored the behavior patterns in recordings with too many or too few observations. But what about recordings with the correct number of observations? They could have incorrectly labeled time slices. For example, a recording might have the correct 62 observations, but only 61 unique slice/time values, due to a slice being duplicated. Let's check for recordings with this problem. There are 21 such cases.
+
+| fname      | problem            |
+|:-----------|:-------------------|
+| 07\_2D\_5  | duplicate slice 35 |
+| 07\_3B\_11 | duplicate slice 23 |
+| 24\_4D\_11 | duplicate slice 44 |
+| 28\_6A\_11 | duplicate slice 32 |
+| 29\_5B\_15 | duplicate slice 57 |
+| 32\_4C\_15 | duplicate slice 32 |
+| 33\_5A\_9  | duplicate slice 24 |
+| 33\_5A\_9  | duplicate slice 25 |
+| 34\_2A\_13 | duplicate slice 52 |
+| 39\_6A\_13 | duplicate slice 1  |
+| 42\_2B\_5  | duplicate slice 32 |
+| 44\_1B\_9  | duplicate slice 53 |
+| 44\_1C\_9  | duplicate slice 52 |
+| 47\_4C\_7  | duplicate slice 14 |
+| 47\_6B\_7  | duplicate slice 32 |
+| 55\_1B\_9  | duplicate slice 32 |
+| 55\_1C\_5  | duplicate slice 7  |
+| 55\_3A\_5  | duplicate slice 60 |
+| 55\_5C\_17 | duplicate slice 32 |
+| 66\_4A\_11 | duplicate slice 52 |
+| 66\_4A\_11 | duplicate slice 53 |
+
+There is also no obvious pattern. The duplications occur in different plates, on different days, and in different slices, which is suggestive of human error rather than anything systematic. An obvious question is whether behavior values are the same between duplicated slices, which would suggest a whole row in the raw data was simply copied.
+
+| fname      |  duplicate\_slice|      1|       2|
+|:-----------|-----------------:|------:|-------:|
+| 07\_2D\_5  |                35|  1.677|   4.724|
+| 07\_3B\_11 |                23|  3.523|   0.258|
+| 24\_4D\_11 |                44|  0.816|   4.336|
+| 28\_6A\_11 |                32|  0.000|   5.432|
+| 29\_5B\_15 |                57|  0.516|   0.129|
+| 32\_4C\_15 |                32|  0.912|  10.965|
+| 33\_5A\_9  |                24|  4.296|   0.000|
+| 33\_5A\_9  |                25|  0.182|   0.000|
+| 34\_2A\_13 |                52|  0.000|   0.182|
+| 39\_6A\_13 |                 1|     NA|   0.258|
+
+This was not the case. Activity clearly differed among the multiple measurements on a single slice (compare column `1` vs `2` in the table above). This suggests that slice was mislabeled for some reason in the raw data, not that entire rows were copied. I think the best way to remedy these 'duplication' cases, would be to re-evaluate a subsample of the videos to check if the duplicate rows are simply mislabeled.
+
+Conclusions
+===========
+
+We have identified some problems (wrong number of rows, missing observations, duplicate slices) and suggested solutions (deletion, reevaluate videos, accept as missing, etc). In total, 90 recordings were considered problematic. This final table summarizes the action taken in each case.
+
+| fname      | problem                                | action                                    |
+|:-----------|:---------------------------------------|:------------------------------------------|
+| 05\_1D\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 05\_2C\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 05\_2D\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 05\_3B\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 05\_4B\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 05\_4D\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 05\_5C\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 05\_6B\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 05\_6C\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 07\_2D\_5  | duplicate slice 35                     | reevaluate video, revise slice values     |
+| 07\_3B\_11 | duplicate slice 23                     | reevaluate video, revise slice values     |
+| 09\_1C\_5  | missing 20                             | reevalute video or deal with missing data |
+| 09\_5D\_5  | missing 20                             | reevalute video or deal with missing data |
+| 09\_5D\_7  | missing 35 to 36                       | reevalute video or deal with missing data |
+| 12\_5D\_11 | missing 23 to 31                       | reevalute video or deal with missing data |
+| 14\_4D\_5  | missing 55                             | reevalute video or deal with missing data |
+| 18\_4A\_9  | missing behav data; missing final obs  | reevalute video or deal with missing data |
+| 18\_5B\_9  | missing behav data; missing final obs  | reevalute video or deal with missing data |
+| 18\_5D\_9  | missing behav data; missing final obs  | reevalute video or deal with missing data |
+| 18\_6C\_9  | missing behav data; missing final obs  | reevalute video or deal with missing data |
+| 24\_2C\_5  | missing 44                             | reevalute video or deal with missing data |
+| 24\_4D\_11 | duplicate slice 44                     | reevaluate video, revise slice values     |
+| 25\_3A\_11 | missing 15 to 24                       | reevalute video or deal with missing data |
+| 26\_6C\_9  | missing 24                             | reevalute video or deal with missing data |
+| 27\_1D\_5  | missing 35 to 37                       | reevalute video or deal with missing data |
+| 28\_3C\_11 | missing 26 to 31                       | reevalute video or deal with missing data |
+| 28\_6A\_11 | duplicate slice 32                     | reevaluate video, revise slice values     |
+| 29\_1C\_17 | missing 9                              | reevalute video or deal with missing data |
+| 29\_5B\_15 | duplicate slice 57                     | reevaluate video, revise slice values     |
+| 32\_1A\_13 | missing 42                             | reevalute video or deal with missing data |
+| 32\_4C\_15 | duplicate slice 32                     | reevaluate video, revise slice values     |
+| 32\_6A\_5  | missing 41                             | reevalute video or deal with missing data |
+| 33\_2D\_5  | missing 54 to 55                       | reevalute video or deal with missing data |
+| 33\_5A\_9  | duplicate slice 24; duplicate slice 25 | reevaluate video, revise slice values     |
+| 34\_2A\_13 | duplicate slice 52                     | reevaluate video, revise slice values     |
+| 35\_2D\_7  | missing 16                             | reevalute video or deal with missing data |
+| 35\_6B\_17 | missing 28                             | reevalute video or deal with missing data |
+| 39\_1B\_7  | not in videography table; too many obs | delete                                    |
+| 39\_2B\_7  | missing behav data; missing final obs  | reevalute video or deal with missing data |
+| 39\_6A\_13 | duplicate slice 1                      | reevaluate video, revise slice values     |
+| 39\_6B\_5  | missing 26                             | reevalute video or deal with missing data |
+| 42\_2B\_5  | duplicate slice 32                     | reevaluate video, revise slice values     |
+| 44\_1B\_9  | duplicate slice 53                     | reevaluate video, revise slice values     |
+| 44\_1C\_9  | duplicate slice 52                     | reevaluate video, revise slice values     |
+| 47\_4C\_7  | duplicate slice 14                     | reevaluate video, revise slice values     |
+| 47\_6B\_7  | duplicate slice 32                     | reevaluate video, revise slice values     |
+| 49\_1C\_13 | missing 53                             | reevalute video or deal with missing data |
+| 50\_6D\_7  | not in videography table               | delete                                    |
+| 51\_1D\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 51\_3D\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 51\_4B\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 51\_4C\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 51\_5B\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 51\_6D\_11 | missing final obs                      | reevalute video or deal with missing data |
+| 52\_1A\_17 | missing 32                             | reevalute video or deal with missing data |
+| 53\_2A\_9  | missing final obs                      | reevalute video or deal with missing data |
+| 53\_3C\_9  | missing final obs                      | reevalute video or deal with missing data |
+| 53\_4B\_9  | missing final obs                      | reevalute video or deal with missing data |
+| 53\_5B\_9  | missing final obs                      | reevalute video or deal with missing data |
+| 53\_6A\_9  | missing final obs                      | reevalute video or deal with missing data |
+| 53\_6D\_9  | missing final obs                      | reevalute video or deal with missing data |
+| 55\_1B\_9  | duplicate slice 32                     | reevaluate video, revise slice values     |
+| 55\_1C\_5  | duplicate slice 7                      | reevaluate video, revise slice values     |
+| 55\_3A\_5  | duplicate slice 60                     | reevaluate video, revise slice values     |
+| 55\_5C\_17 | duplicate slice 32                     | reevaluate video, revise slice values     |
+| 61\_1A\_9  | missing final obs                      | accept missing 15 final obs               |
+| 61\_1B\_9  | missing final obs                      | accept missing 15 final obs               |
+| 61\_1D\_9  | missing final obs                      | accept missing 15 final obs               |
+| 61\_2A\_9  | missing final obs                      | accept missing 15 final obs               |
+| 61\_2C\_9  | missing final obs                      | accept missing 15 final obs               |
+| 61\_2D\_9  | missing final obs                      | accept missing 15 final obs               |
+| 61\_3B\_9  | missing final obs                      | accept missing 15 final obs               |
+| 61\_4A\_9  | missing final obs                      | accept missing 15 final obs               |
+| 61\_4B\_9  | missing final obs                      | accept missing 15 final obs               |
+| 61\_5B\_9  | missing final obs                      | accept missing 15 final obs               |
+| 61\_5C\_9  | missing final obs                      | accept missing 15 final obs               |
+| 61\_6A\_9  | missing final obs                      | accept missing 15 final obs               |
+| 61\_6B\_9  | missing final obs                      | accept missing 15 final obs               |
+| 63\_1C\_13 | missing 30                             | reevalute video or deal with missing data |
+| 63\_3B\_7  | missing 53                             | reevalute video or deal with missing data |
+| 66\_1B\_9  | not in videography table               | delete                                    |
+| 66\_4A\_11 | duplicate slice 52; duplicate slice 53 | reevaluate video, revise slice values     |
+| 66\_6B\_11 | missing 26 to 27                       | reevalute video or deal with missing data |
+| 74\_1B\_13 | too many obs                           | remove extra obs from raw data            |
+| 74\_1C\_13 | too many obs                           | remove extra obs from raw data            |
+| 74\_2B\_13 | too many obs                           | remove extra obs from raw data            |
+| 74\_3A\_13 | too many obs                           | remove extra obs from raw data            |
+| 74\_3D\_13 | too many obs                           | remove extra obs from raw data            |
+| 74\_4A\_13 | too many obs                           | remove extra obs from raw data            |
+| 74\_5D\_13 | too many obs                           | remove extra obs from raw data            |

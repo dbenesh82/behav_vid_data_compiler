@@ -294,7 +294,7 @@ knitr::kable( dup%>%select(fname, problem)%>%arrange(fname),
               caption = "Duplicated slices")
 ```
 
-There is also no obvious pattern. The duplications occur in different plates, on different days, and in different slices, which is suggestive of human error rather than anything systematic. An obvious question is whether behavior values are the between duplicated slices, suggesting a whole row in the raw data was simply copied. 
+There is also no obvious pattern. The duplications occur in different plates, on different days, and in different slices, which is suggestive of human error rather than anything systematic. An obvious question is whether behavior values are the same between duplicated slices, which would suggest a whole row in the raw data was simply copied. 
 
 ```{r}
 tf <- mutate(bd, matcher = paste(fname, slice))%>%
@@ -306,7 +306,7 @@ tf <- tf%>%spread(key = i, value = dist)
 knitr::kable( head(tf, n = 10), caption = "Behavior in ten slice duplications")
 ```
 
-This was not the case. Activity clearly differed among the multiple measurements on a single slice; compare column `1` vs `2`. This suggests that slice was mislabeled for some reason in the raw data, not that entire rows were copied. I think the best way to remedy these cases, would be to re-evaluate a subsample of the videos to check if the duplicate rows are simply mislabeled.
+This was not the case. Activity clearly differed among the multiple measurements on a single slice (compare column `1` vs `2` in the table above). This suggests that slice was mislabeled for some reason in the raw data, not that entire rows were copied. I think the best way to remedy these 'duplication' cases, would be to re-evaluate a subsample of the videos to check if the duplicate rows are simply mislabeled.
 
 # Conclusions
 
@@ -318,7 +318,7 @@ prob_cop_c2 <- prob_cop_c2%>%
   spread(key = i, value = problem)%>%
   rename(problem1 = `1`, problem2 = `2`)
 ```
-We have identified some problems (wrong number of rows, missing observations, duplicate slices) and suggested solutions (deletion, reevaluate videos, accept as missing, etc). In total, `r length(unique(prob_cop_c2))` recordings were considered problematic. This last table summarizes the action taken in each case.
+We have identified some problems (wrong number of rows, missing observations, duplicate slices) and suggested solutions (deletion, reevaluate videos, accept as missing, etc). In total, `r length(unique(prob_cop_c2$fname))` recordings were considered problematic. This final table summarizes the action taken in each case.
 
 ```{r}
 # add 'action' column describing what was done in each case
@@ -351,4 +351,3 @@ knitr::kable(
     select(fname, problem, action)
 )
 ```
-
